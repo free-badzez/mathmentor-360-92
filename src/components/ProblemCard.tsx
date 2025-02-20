@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Brain, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, ChevronRight, XCircle } from "lucide-react";
 import { Problem } from "@/types/practice";
 
 interface ProblemCardProps {
@@ -11,6 +11,7 @@ interface ProblemCardProps {
   showExplanation: boolean;
   onToggleExplanation: () => void;
   onNextQuestion: () => void;
+  onEndPractice: () => void;
   hasNextQuestion: boolean;
 }
 
@@ -21,6 +22,7 @@ const ProblemCard = ({
   showExplanation,
   onToggleExplanation,
   onNextQuestion,
+  onEndPractice,
   hasNextQuestion,
 }: ProblemCardProps) => {
   return (
@@ -58,19 +60,39 @@ const ProblemCard = ({
             </div>
 
             {selectedAnswer && (
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={onToggleExplanation}
-              >
-                <Brain className="h-4 w-4" />
-                {showExplanation ? "Hide" : "Show"} Explanation
-                {showExplanation ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={onToggleExplanation}
+                >
+                  <Brain className="h-4 w-4" />
+                  {showExplanation ? "Hide" : "Show"} Explanation
+                  {showExplanation ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="gap-2"
+                  onClick={onEndPractice}
+                >
+                  <XCircle className="h-4 w-4" />
+                  End Practice
+                </Button>
+                {hasNextQuestion && (
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={onNextQuestion}
+                  >
+                    Next Question
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 )}
-              </Button>
+              </div>
             )}
 
             {showExplanation && (
@@ -81,16 +103,6 @@ const ProblemCard = ({
               </div>
             )}
           </div>
-          {selectedAnswer && hasNextQuestion && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-              onClick={onNextQuestion}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          )}
         </div>
       </div>
     </Card>

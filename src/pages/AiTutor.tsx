@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -171,7 +170,7 @@ const AiTutor = () => {
           </CardContent>
         </Card>
 
-        <div className="space-y-6 mb-12">
+        <div className="space-y-6">
           {chatHistory.map((message) => (
             <Card 
               key={message.id} 
@@ -190,30 +189,6 @@ const AiTutor = () => {
                       {message.timestamp.toLocaleTimeString()}
                     </p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="space-y-8">
-          <h2 className="text-2xl font-bold text-center mb-6">Common Mathematical Formulas</h2>
-          {formulaSections.map((section) => (
-            <Card key={section.title} className="bg-white">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-4">{section.title}</h3>
-                <div className="grid gap-6">
-                  {section.formulas.map((formula) => (
-                    <div key={formula.name} className="space-y-2">
-                      <h4 className="font-medium text-blue-600">{formula.name}</h4>
-                      <p className="font-mono bg-gray-50 p-2 rounded">{formula.formula}</p>
-                      <p className="text-gray-600">{formula.explanation}</p>
-                      <div className="bg-gray-50 p-3 rounded-lg mt-2">
-                        <p className="text-sm font-medium text-gray-500">Example:</p>
-                        <p className="whitespace-pre-wrap font-mono text-sm">{formula.example}</p>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </CardContent>
             </Card>

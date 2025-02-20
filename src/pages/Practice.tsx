@@ -6,6 +6,8 @@ import MathGame from "@/components/MathGame";
 import FloatingCalculator from "@/components/FloatingCalculator";
 import ChapterSelector from "@/components/ChapterSelector";
 import { Problem, Chapter } from "@/types/practice";
+import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 const Practice = () => {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
@@ -14,6 +16,9 @@ const Practice = () => {
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [showGame, setShowGame] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [isFinished, setIsFinished] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const chapters: Chapter[] = [
@@ -21,96 +26,42 @@ const Practice = () => {
     { id: "algebra-2", name: "Equations", subject: "Algebra" },
     { id: "geometry-1", name: "Circles", subject: "Geometry" },
     { id: "geometry-2", name: "Triangles", subject: "Geometry" },
+    { id: "polynomial", name: "Polynomials", subject: "Algebra" },
+    { id: "trigonometry", name: "Trigonometry", subject: "Trigonometry" },
   ];
 
-  const problems: Problem[] = [
-    {
-      id: 1,
-      question: "Solve for x: 2x + 5 = 15",
-      options: [
-        { id: "a", text: "x = 5" },
-        { id: "b", text: "x = 10" },
-        { id: "c", text: "x = 7.5" },
-        { id: "d", text: "x = 6" },
-      ],
-      correctAnswer: "a",
-      difficulty: "Easy",
-      subject: "Algebra",
-      chapter: "Equations",
-      explanation: `Step 1: Subtract 5 from both sides
-2x + 5 - 5 = 15 - 5
-2x = 10
+  const generateProblems = async (chapterId: string) => {
+    setIsLoading(true);
+    try {
+      const chapter = chapters.find(c => c.id === chapterId)?.name;
+      const { data, error } = await supabase.functions.invoke('generate-math-questions', {
+        body: { chapter }
+      });
 
-Step 2: Divide both sides by 2
-2x ÷ 2 = 10 ÷ 2
-x = 5`,
-    },
-    {
-      id: 2,
-      question: "Find the area of a circle with radius 6",
-      options: [
-        { id: "a", text: "36π" },
-        { id: "b", text: "12π" },
-        { id: "c", text: "18π" },
-        { id: "d", text: "24π" },
-      ],
-      correctAnswer: "a",
-      difficulty: "Medium",
-      subject: "Geometry",
-      chapter: "Circles",
-      explanation: `Step 1: Recall the formula for circle area
-Area = πr²
-
-Step 2: Substitute r = 6
-Area = π(6)²
-Area = π(36)
-Area = 36π square units`,
-    },
-    {
-      id: 3,
-      question: "Simplify: (x² + 2x + 1) - (x² - 2x + 4)",
-      options: [
-        { id: "a", text: "4x - 3" },
-        { id: "b", text: "4x + 3" },
-        { id: "c", text: "4x - 5" },
-        { id: "d", text: "-3" },
-      ],
-      correctAnswer: "a",
-      difficulty: "Hard",
-      subject: "Algebra",
-      chapter: "Equations",
-      explanation: `Step 1: Remove parentheses and combine like terms
-(x² + 2x + 1) - (x² - 2x + 4)
-= x² + 2x + 1 - x² + 2x - 4
-
-Step 2: Cancel out x² terms
-= 2x + 2x + 1 - 4
-
-Step 3: Combine like terms
-= 4x - 3`,
-    },
-  ];
-
-  const filteredProblems = selectedChapter
-    ? problems.filter(p => p.chapter === chapters.find(c => c.id === selectedChapter)?.name)
-    : [];
+      if (error) throw error;
+      setProblems(data.questions);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error generating questions",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const checkAnswer = (problemId: number, selectedOption: string) => {
     setSelectedAnswers(prev => ({ ...prev, [problemId]: selectedOption }));
     const problem = problems.find(p => p.id === problemId);
     
     if (problem?.correctAnswer === selectedOption) {
-      const newCorrectCount = correctAnswersCount + 1;
-      setCorrectAnswersCount(newCorrectCount);
-      
+      setCorrectAnswersCount(prev => prev + 1);
       toast({
         title: "Correct! 🎉",
         description: "Great job solving this problem!",
       });
-
-      if (newCorrectCount % 3 === 0) {
-        setShowGame(true);
-      }
     } else {
       toast({
         title: "Not quite right",
@@ -125,20 +76,32 @@ Step 3: Combine like terms
   };
 
   const handleNextQuestion = () => {
-    if (currentProblemIndex < filteredProblems.length - 1) {
+    if (currentProblemIndex < problems.length - 1) {
       setCurrentProblemIndex(prev => prev + 1);
     }
+  };
+
+  const handleEndPractice = () => {
+    setIsFinished(true);
   };
 
   const toggleExplanation = (problemId: number) => {
     setShowExplanation(prev => ({ ...prev, [problemId]: !prev[problemId] }));
   };
 
-  const handleChapterSelect = (chapterId: string) => {
+  const handleChapterSelect = async (chapterId: string) => {
     setSelectedChapter(chapterId);
     setCurrentProblemIndex(0);
     setSelectedAnswers({});
     setShowExplanation({});
+    setCorrectAnswersCount(0);
+    setIsFinished(false);
+    await generateProblems(chapterId);
+  };
+
+  const calculateAccuracy = () => {
+    if (Object.keys(selectedAnswers).length === 0) return 0;
+    return (correctAnswersCount / Object.keys(selectedAnswers).length) * 100;
   };
 
   return (
@@ -162,17 +125,39 @@ Step 3: Combine like terms
             selectedChapter={selectedChapter}
             onChapterSelect={handleChapterSelect}
           />
+        ) : isLoading ? (
+          <Card className="p-8 text-center">
+            <p>Generating questions...</p>
+          </Card>
         ) : showGame ? (
           <MathGame onComplete={handleGameComplete} />
-        ) : filteredProblems.length > 0 ? (
+        ) : isFinished ? (
+          <Card className="p-8">
+            <CardContent>
+              <h2 className="text-2xl font-bold mb-4">Practice Results</h2>
+              <div className="space-y-4">
+                <p>Total Questions: {problems.length}</p>
+                <p>Correct Answers: {correctAnswersCount}</p>
+                <p>Accuracy: {calculateAccuracy().toFixed(1)}%</p>
+                <button
+                  onClick={() => setSelectedChapter(null)}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Try Another Chapter
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : problems.length > 0 ? (
           <ProblemCard
-            problem={filteredProblems[currentProblemIndex]}
-            selectedAnswer={selectedAnswers[filteredProblems[currentProblemIndex].id]}
+            problem={problems[currentProblemIndex]}
+            selectedAnswer={selectedAnswers[problems[currentProblemIndex].id]}
             onAnswerSelect={checkAnswer}
-            showExplanation={showExplanation[filteredProblems[currentProblemIndex].id]}
-            onToggleExplanation={() => toggleExplanation(filteredProblems[currentProblemIndex].id)}
+            showExplanation={showExplanation[problems[currentProblemIndex].id]}
+            onToggleExplanation={() => toggleExplanation(problems[currentProblemIndex].id)}
             onNextQuestion={handleNextQuestion}
-            hasNextQuestion={currentProblemIndex < filteredProblems.length - 1}
+            onEndPractice={handleEndPractice}
+            hasNextQuestion={currentProblemIndex < problems.length - 1}
           />
         ) : (
           <div className="text-center py-8 text-gray-600">
