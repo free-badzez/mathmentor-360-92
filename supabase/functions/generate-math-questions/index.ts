@@ -17,15 +17,19 @@ serve(async (req) => {
   try {
     const { chapter } = await req.json();
 
-    const prompt = `Generate 20 multiple choice math questions for ${chapter}. 
+    const prompt = `Generate 10 multiple choice math questions for ${chapter}, specifically:
+    - 4 Easy questions
+    - 4 Medium questions
+    - 2 Hard questions
+    
     Format each question as a JSON object with these properties:
-    - question (string)
+    - question (string, keep it concise)
     - options (array of 4 objects with id: "a"|"b"|"c"|"d" and text: string)
     - correctAnswer ("a"|"b"|"c"|"d")
-    - explanation (detailed step by step solution)
+    - explanation (brief but clear step-by-step solution)
     - difficulty (string: "Easy"|"Medium"|"Hard")
-    Return as a JSON array of these question objects.
-    Make sure to provide a good mix of difficulty levels and comprehensive coverage of the topic.`;
+    
+    Make sure the questions are focused and practical. Return as a JSON array.`;
 
     const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY, {
       method: 'POST',
@@ -39,9 +43,10 @@ serve(async (req) => {
           }]
         }],
         generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
+          temperature: 0.5,
+          topK: 20,
+          topP: 0.8,
+          maxOutputTokens: 2048,
         },
       }),
     });
@@ -53,7 +58,13 @@ serve(async (req) => {
       questionsText.lastIndexOf(']') + 1
     ));
 
-    return new Response(JSON.stringify({ questions }), {
+    // Add IDs to questions
+    const questionsWithIds = questions.map((q: any, index: number) => ({
+      ...q,
+      id: index + 1
+    }));
+
+    return new Response(JSON.stringify({ questions: questionsWithIds }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

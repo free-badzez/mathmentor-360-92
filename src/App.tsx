@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import ThemeToggle from "./components/ThemeToggle";
 import Index from "./pages/Index";
 import AiTutor from "./pages/AiTutor";
 import Practice from "./pages/Practice";
@@ -22,17 +23,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/ai-tutor" element={<AiTutor />} />
-          <Route path="/practice" element={<Practice />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/formulas" element={<Formulas />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="min-h-screen bg-background text-foreground transition-colors">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/ai-tutor" element={<AiTutor />} />
+            <Route path="/practice" element={<Practice />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/formulas" element={<Formulas />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <ThemeToggle />
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

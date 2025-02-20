@@ -53,13 +53,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        tutor: {
-          primary: "#333333",
-          secondary: "#555555",
-          accent: "#888888",
-          background: "#F1F1F1",
-          text: "#222222",
-        },
       },
       keyframes: {
         "fade-up": {
