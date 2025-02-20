@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import ProblemCard from "@/components/ProblemCard";
 import MathGame from "@/components/MathGame";
 import FloatingCalculator from "@/components/FloatingCalculator";
-import { Problem } from "@/types/practice";
+import ChapterSelector from "@/components/ChapterSelector";
+import { Problem, Chapter } from "@/types/practice";
 
 const Practice = () => {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
@@ -11,7 +13,15 @@ const Practice = () => {
   const [showExplanation, setShowExplanation] = useState<Record<number, boolean>>({});
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [showGame, setShowGame] = useState(false);
+  const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const chapters: Chapter[] = [
+    { id: "algebra-1", name: "Algebra Basics", subject: "Algebra" },
+    { id: "algebra-2", name: "Equations", subject: "Algebra" },
+    { id: "geometry-1", name: "Circles", subject: "Geometry" },
+    { id: "geometry-2", name: "Triangles", subject: "Geometry" },
+  ];
 
   const problems: Problem[] = [
     {
@@ -26,6 +36,7 @@ const Practice = () => {
       correctAnswer: "a",
       difficulty: "Easy",
       subject: "Algebra",
+      chapter: "Equations",
       explanation: `Step 1: Subtract 5 from both sides
 2x + 5 - 5 = 15 - 5
 2x = 10
@@ -78,6 +89,10 @@ Step 3: Combine like terms
     },
   ];
 
+  const filteredProblems = selectedChapter
+    ? problems.filter(p => p.chapter === chapters.find(c => c.id === selectedChapter)?.name)
+    : [];
+
   const checkAnswer = (problemId: number, selectedOption: string) => {
     setSelectedAnswers(prev => ({ ...prev, [problemId]: selectedOption }));
     const problem = problems.find(p => p.id === problemId);
@@ -93,10 +108,6 @@ Step 3: Combine like terms
 
       if (newCorrectCount % 3 === 0) {
         setShowGame(true);
-      } else if (currentProblemIndex < problems.length - 1) {
-        setTimeout(() => {
-          setCurrentProblemIndex(prev => prev + 1);
-        }, 1500);
       }
     } else {
       toast({
@@ -109,7 +120,10 @@ Step 3: Combine like terms
 
   const handleGameComplete = () => {
     setShowGame(false);
-    if (currentProblemIndex < problems.length - 1) {
+  };
+
+  const handleNextQuestion = () => {
+    if (currentProblemIndex < filteredProblems.length - 1) {
       setCurrentProblemIndex(prev => prev + 1);
     }
   };
@@ -118,13 +132,18 @@ Step 3: Combine like terms
     setShowExplanation(prev => ({ ...prev, [problemId]: !prev[problemId] }));
   };
 
-  const currentProblem = problems[currentProblemIndex];
+  const handleChapterSelect = (chapterId: string) => {
+    setSelectedChapter(chapterId);
+    setCurrentProblemIndex(0);
+    setSelectedAnswers({});
+    setShowExplanation({});
+  };
 
   return (
-    <div className="min-h-screen bg-tutor-background pt-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-tutor-text mb-4">Practice Problems</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Practice Problems</h1>
           <p className="text-gray-600">
             Strengthen your math skills with these practice problems
             {correctAnswersCount > 0 && (
@@ -135,16 +154,28 @@ Step 3: Combine like terms
           </p>
         </div>
 
-        {showGame ? (
-          <MathGame onComplete={handleGameComplete} />
-        ) : (
-          <ProblemCard
-            problem={currentProblem}
-            selectedAnswer={selectedAnswers[currentProblem.id]}
-            onAnswerSelect={checkAnswer}
-            showExplanation={showExplanation[currentProblem.id]}
-            onToggleExplanation={() => toggleExplanation(currentProblem.id)}
+        {!selectedChapter ? (
+          <ChapterSelector
+            chapters={chapters}
+            selectedChapter={selectedChapter}
+            onChapterSelect={handleChapterSelect}
           />
+        ) : showGame ? (
+          <MathGame onComplete={handleGameComplete} />
+        ) : filteredProblems.length > 0 ? (
+          <ProblemCard
+            problem={filteredProblems[currentProblemIndex]}
+            selectedAnswer={selectedAnswers[filteredProblems[currentProblemIndex].id]}
+            onAnswerSelect={checkAnswer}
+            showExplanation={showExplanation[filteredProblems[currentProblemIndex].id]}
+            onToggleExplanation={() => toggleExplanation(filteredProblems[currentProblemIndex].id)}
+            onNextQuestion={handleNextQuestion}
+            hasNextQuestion={currentProblemIndex < filteredProblems.length - 1}
+          />
+        ) : (
+          <div className="text-center py-8 text-gray-600">
+            No problems available for this chapter yet.
+          </div>
         )}
       </div>
       <FloatingCalculator />
