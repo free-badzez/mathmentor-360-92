@@ -10,7 +10,7 @@ const Navbar = () => {
           <div className="flex">
             <Link
               to="/"
-              className="flex items-center px-4 text-tutor-text hover:text-tutor-primary premium-transition"
+              className="flex items-center px-4 text-gray-700 hover:text-gray-900 premium-transition"
             >
               <GraduationCap className="h-6 w-6 mr-2" />
               <span className="font-semibold text-lg">MathMentor</span>
@@ -35,10 +35,10 @@ const Navbar = () => {
 const NavLink = ({ to, icon, text }: { to: string; icon: React.ReactNode; text: string }) => (
   <Link
     to={to}
-    className="flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-tutor-primary hover:bg-gray-50/80 premium-transition"
+    className="flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 premium-transition group"
   >
     {icon}
-    <span className="ml-2">{text}</span>
+    <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">{text}</span>
   </Link>
 );
 

@@ -54,11 +54,11 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         tutor: {
-          primary: "#2DD4BF",
-          secondary: "#0EA5E9",
-          accent: "#8B5CF6",
-          background: "#F8FAFC",
-          text: "#1E293B",
+          primary: "#333333",
+          secondary: "#555555",
+          accent: "#888888",
+          background: "#F1F1F1",
+          text: "#222222",
         },
       },
       keyframes: {
