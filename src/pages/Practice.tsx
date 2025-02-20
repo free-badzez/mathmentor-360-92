@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import ProblemCard from "@/components/ProblemCard";
@@ -58,16 +57,6 @@ const Practice = () => {
     
     if (problem?.correctAnswer === selectedOption) {
       setCorrectAnswersCount(prev => prev + 1);
-      toast({
-        title: "Correct! 🎉",
-        description: "Great job solving this problem!",
-      });
-    } else {
-      toast({
-        title: "Not quite right",
-        description: "Click 'Show Explanation' to see the solution steps.",
-        variant: "destructive",
-      });
     }
   };
 

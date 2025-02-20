@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Brain, ChevronDown, ChevronUp, ChevronRight, XCircle } from "lucide-react";
 import { Problem } from "@/types/practice";
+import { useEffect } from "react";
 
 interface ProblemCardProps {
   problem: Problem;
@@ -25,6 +26,14 @@ const ProblemCard = ({
   onEndPractice,
   hasNextQuestion,
 }: ProblemCardProps) => {
+  useEffect(() => {
+    // Reset selected answer when problem changes
+    const buttons = document.querySelectorAll('button[data-option]');
+    buttons.forEach(button => {
+      button.classList.remove('bg-green-500', 'bg-red-500', 'hover:bg-green-600', 'hover:bg-red-600');
+    });
+  }, [problem.id]);
+
   return (
     <Card className="glass-card p-6 animate-fade-up hover-lift">
       <div className="space-y-4">
@@ -43,6 +52,7 @@ const ProblemCard = ({
               {problem.options.map((option) => (
                 <Button
                   key={option.id}
+                  data-option={option.id}
                   variant={selectedAnswer === option.id ? "default" : "outline"}
                   className={`justify-start ${
                     selectedAnswer === option.id &&
@@ -95,7 +105,7 @@ const ProblemCard = ({
               </div>
             )}
 
-            {showExplanation && (
+            {selectedAnswer && showExplanation && (
               <div className="mt-4 p-4 bg-white/50 rounded-lg">
                 <pre className="whitespace-pre-wrap font-mono text-sm text-gray-700">
                   {problem.explanation}
