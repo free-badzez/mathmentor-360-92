@@ -1,29 +1,16 @@
-
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Calculator, Brain, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Option {
-  id: string;
-  text: string;
-}
-
-interface Problem {
-  id: number;
-  question: string;
-  options: Option[];
-  correctAnswer: string;
-  difficulty: string;
-  subject: string;
-  explanation: string;
-}
+import ProblemCard from "@/components/ProblemCard";
+import MathGame from "@/components/MathGame";
+import FloatingCalculator from "@/components/FloatingCalculator";
+import { Problem } from "@/types/practice";
 
 const Practice = () => {
+  const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
   const [showExplanation, setShowExplanation] = useState<Record<number, boolean>>({});
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
+  const [showGame, setShowGame] = useState(false);
   const { toast } = useToast();
 
   const problems: Problem[] = [
@@ -104,28 +91,12 @@ Step 3: Combine like terms
         description: "Great job solving this problem!",
       });
 
-      // Check if it's time for a mini-game
       if (newCorrectCount % 3 === 0) {
-        toast({
-          title: "🎮 Game Break!",
-          description: "You've earned a fun break! Ready for a quick game?",
-          variant: "default",
-          duration: 5000,
-          action: (
-            <Button
-              onClick={() => {
-                toast({
-                  title: "Quick Math Challenge",
-                  description: "How fast can you solve these problems? Ready... Set... Go!",
-                });
-              }}
-              variant="outline"
-              size="sm"
-            >
-              Play Now
-            </Button>
-          ),
-        });
+        setShowGame(true);
+      } else if (currentProblemIndex < problems.length - 1) {
+        setTimeout(() => {
+          setCurrentProblemIndex(prev => prev + 1);
+        }, 1500);
       }
     } else {
       toast({
@@ -136,9 +107,18 @@ Step 3: Combine like terms
     }
   };
 
+  const handleGameComplete = () => {
+    setShowGame(false);
+    if (currentProblemIndex < problems.length - 1) {
+      setCurrentProblemIndex(prev => prev + 1);
+    }
+  };
+
   const toggleExplanation = (problemId: number) => {
     setShowExplanation(prev => ({ ...prev, [problemId]: !prev[problemId] }));
   };
+
+  const currentProblem = problems[currentProblemIndex];
 
   return (
     <div className="min-h-screen bg-tutor-background pt-20 px-4 sm:px-6 lg:px-8">
@@ -155,76 +135,19 @@ Step 3: Combine like terms
           </p>
         </div>
 
-        <div className="grid gap-6">
-          {problems.map((problem) => (
-            <Card key={problem.id} className="glass-card p-6 animate-fade-up hover-lift">
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm font-medium text-tutor-primary">{problem.subject}</span>
-                      <span className="text-sm text-gray-500">•</span>
-                      <span className="text-sm text-gray-500">{problem.difficulty}</span>
-                    </div>
-                    <p className="text-lg font-medium text-tutor-text mb-4">{problem.question}</p>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                      {problem.options.map((option) => (
-                        <Button
-                          key={option.id}
-                          variant={selectedAnswers[problem.id] === option.id ? "default" : "outline"}
-                          className={`justify-start ${
-                            selectedAnswers[problem.id] === option.id &&
-                            option.id === problem.correctAnswer
-                              ? "bg-green-500 hover:bg-green-600"
-                              : selectedAnswers[problem.id] === option.id
-                              ? "bg-red-500 hover:bg-red-600"
-                              : ""
-                          }`}
-                          onClick={() => checkAnswer(problem.id, option.id)}
-                        >
-                          {option.id}. {option.text}
-                        </Button>
-                      ))}
-                    </div>
-
-                    {selectedAnswers[problem.id] && (
-                      <Button
-                        variant="outline"
-                        className="gap-2"
-                        onClick={() => toggleExplanation(problem.id)}
-                      >
-                        <Brain className="h-4 w-4" />
-                        {showExplanation[problem.id] ? "Hide" : "Show"} Explanation
-                        {showExplanation[problem.id] ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-
-                    {showExplanation[problem.id] && (
-                      <div className="mt-4 p-4 bg-white/50 rounded-lg">
-                        <pre className="whitespace-pre-wrap font-mono text-sm text-gray-700">
-                          {problem.explanation}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="text-tutor-primary hover:text-tutor-secondary"
-                  >
-                    <Calculator className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        {showGame ? (
+          <MathGame onComplete={handleGameComplete} />
+        ) : (
+          <ProblemCard
+            problem={currentProblem}
+            selectedAnswer={selectedAnswers[currentProblem.id]}
+            onAnswerSelect={checkAnswer}
+            showExplanation={showExplanation[currentProblem.id]}
+            onToggleExplanation={() => toggleExplanation(currentProblem.id)}
+          />
+        )}
       </div>
+      <FloatingCalculator />
     </div>
   );
 };
