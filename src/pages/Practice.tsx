@@ -57,6 +57,7 @@ x = 5`,
       correctAnswer: "a",
       difficulty: "Medium",
       subject: "Geometry",
+      chapter: "Circles",
       explanation: `Step 1: Recall the formula for circle area
 Area = πr²
 
@@ -77,6 +78,7 @@ Area = 36π square units`,
       correctAnswer: "a",
       difficulty: "Hard",
       subject: "Algebra",
+      chapter: "Equations",
       explanation: `Step 1: Remove parentheses and combine like terms
 (x² + 2x + 1) - (x² - 2x + 4)
 = x² + 2x + 1 - x² + 2x - 4
