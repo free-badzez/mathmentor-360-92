@@ -10,6 +10,8 @@ import AiTutor from "./pages/AiTutor";
 import Practice from "./pages/Practice";
 import Profile from "./pages/Profile";
 import Resources from "./pages/Resources";
+import Dashboard from "./pages/Dashboard";
+import Formulas from "./pages/Formulas";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,10 +25,12 @@ const App = () => (
         <Navbar />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/ai-tutor" element={<AiTutor />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/resources" element={<Resources />} />
+          <Route path="/formulas" element={<Formulas />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

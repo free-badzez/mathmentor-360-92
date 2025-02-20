@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Calculator, GraduationCap, Home, BookOpen, User, Library } from "lucide-react";
+import { Calculator, GraduationCap, Home, BookOpen, User, Library, LayoutDashboard, Functions } from "lucide-react";
 
 const Navbar = () => {
   return (
@@ -19,9 +19,11 @@ const Navbar = () => {
           
           <div className="flex space-x-2">
             <NavLink to="/" icon={<Home className="h-5 w-5" />} text="Home" />
+            <NavLink to="/dashboard" icon={<LayoutDashboard className="h-5 w-5" />} text="Dashboard" />
             <NavLink to="/practice" icon={<Calculator className="h-5 w-5" />} text="Practice" />
             <NavLink to="/ai-tutor" icon={<BookOpen className="h-5 w-5" />} text="AI Tutor" />
             <NavLink to="/resources" icon={<Library className="h-5 w-5" />} text="Resources" />
+            <NavLink to="/formulas" icon={<Functions className="h-5 w-5" />} text="Formulas" />
             <NavLink to="/profile" icon={<User className="h-5 w-5" />} text="Profile" />
           </div>
         </div>
