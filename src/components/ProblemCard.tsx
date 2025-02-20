@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Brain, Calculator, ChevronDown, ChevronUp } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
 import { Problem } from "@/types/practice";
 
 interface ProblemCardProps {
@@ -10,6 +10,8 @@ interface ProblemCardProps {
   onAnswerSelect: (problemId: number, selectedOption: string) => void;
   showExplanation: boolean;
   onToggleExplanation: () => void;
+  onNextQuestion: () => void;
+  hasNextQuestion: boolean;
 }
 
 const ProblemCard = ({
@@ -18,6 +20,8 @@ const ProblemCard = ({
   onAnswerSelect,
   showExplanation,
   onToggleExplanation,
+  onNextQuestion,
+  hasNextQuestion,
 }: ProblemCardProps) => {
   return (
     <Card className="glass-card p-6 animate-fade-up hover-lift">
@@ -25,11 +29,13 @@ const ProblemCard = ({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-tutor-primary">{problem.subject}</span>
+              <span className="text-sm font-medium text-gray-700">{problem.subject}</span>
               <span className="text-sm text-gray-500">•</span>
               <span className="text-sm text-gray-500">{problem.difficulty}</span>
+              <span className="text-sm text-gray-500">•</span>
+              <span className="text-sm text-gray-500">{problem.chapter}</span>
             </div>
-            <p className="text-lg font-medium text-tutor-text mb-4">{problem.question}</p>
+            <p className="text-lg font-medium text-gray-800 mb-4">{problem.question}</p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {problem.options.map((option) => (
@@ -75,13 +81,16 @@ const ProblemCard = ({
               </div>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="text-tutor-primary hover:text-tutor-secondary"
-          >
-            <Calculator className="h-4 w-4" />
-          </Button>
+          {selectedAnswer && hasNextQuestion && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+              onClick={onNextQuestion}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </Card>
