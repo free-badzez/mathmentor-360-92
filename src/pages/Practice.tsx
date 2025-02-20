@@ -23,6 +23,7 @@ interface Problem {
 const Practice = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
   const [showExplanation, setShowExplanation] = useState<Record<number, boolean>>({});
+  const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const { toast } = useToast();
 
   const problems: Problem[] = [
@@ -95,10 +96,37 @@ Step 3: Combine like terms
     const problem = problems.find(p => p.id === problemId);
     
     if (problem?.correctAnswer === selectedOption) {
+      const newCorrectCount = correctAnswersCount + 1;
+      setCorrectAnswersCount(newCorrectCount);
+      
       toast({
         title: "Correct! 🎉",
         description: "Great job solving this problem!",
       });
+
+      // Check if it's time for a mini-game
+      if (newCorrectCount % 3 === 0) {
+        toast({
+          title: "🎮 Game Break!",
+          description: "You've earned a fun break! Ready for a quick game?",
+          variant: "default",
+          duration: 5000,
+          action: (
+            <Button
+              onClick={() => {
+                toast({
+                  title: "Quick Math Challenge",
+                  description: "How fast can you solve these problems? Ready... Set... Go!",
+                });
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Play Now
+            </Button>
+          ),
+        });
+      }
     } else {
       toast({
         title: "Not quite right",
@@ -117,7 +145,14 @@ Step 3: Combine like terms
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-tutor-text mb-4">Practice Problems</h1>
-          <p className="text-gray-600">Strengthen your math skills with these practice problems</p>
+          <p className="text-gray-600">
+            Strengthen your math skills with these practice problems
+            {correctAnswersCount > 0 && (
+              <span className="ml-2">
+                • Score: {correctAnswersCount} ✨
+              </span>
+            )}
+          </p>
         </div>
 
         <div className="grid gap-6">
