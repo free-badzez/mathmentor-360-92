@@ -65,7 +65,7 @@ const ProblemCard = ({
                   </Button>}
               </div>}
 
-            {selectedAnswer && showExplanation && <div className="mt-4 p-4 bg-white/50 rounded-lg">
+            {selectedAnswer && showExplanation && <div className="mt-4 p-4 rounded-lg bg-slate-50">
                 <pre className="whitespace-pre-wrap font-mono text-sm text-gray-700">
                   {problem.explanation}
                 </pre>
