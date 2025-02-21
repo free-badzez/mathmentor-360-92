@@ -30,7 +30,7 @@ const ProblemCard = ({
       button.classList.remove('bg-green-500', 'bg-red-500', 'hover:bg-green-600', 'hover:bg-red-600');
     });
   }, [problem.id]);
-  return <Card className="glass-card p-6 animate-fade-up hover-lift bg-zinc-900 hover:bg-zinc-800">
+  return <Card className="glass-card p-6 animate-fade-up hover-lift bg-slate-50">
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
