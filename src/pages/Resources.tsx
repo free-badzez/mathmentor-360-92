@@ -107,7 +107,7 @@ const Resources = () => {
             <p className="text-gray-600 mb-4">
               Can't find what you're looking for? Our AI tutor is here to help you with personalized assistance.
             </p>
-            <Button variant="outline" className="w-full">Contact AI Tutor</Button>
+            <Button variant="outline" className="w-full bg-[#11bbf2] text-slate-50">Contact AI Tutor</Button>
           </CardContent>
         </Card>
       </div>
