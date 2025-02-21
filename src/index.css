@@ -75,6 +75,10 @@
   .hover-lift {
     @apply hover:-translate-y-1 transition-transform duration-200;
   }
+
+  .depth-shadow {
+    @apply shadow-md hover:shadow-lg transition-shadow duration-200;
+  }
 }
 
 .animate-slide-up {
@@ -91,4 +95,3 @@
     transform: translateY(0);
   }
 }
-
