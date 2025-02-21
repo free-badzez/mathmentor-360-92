@@ -49,7 +49,7 @@ const Index = () => {
           <p className="text-gray-600 mb-6 max-w-xl mx-auto">
             Join thousands of students who are mastering mathematics with personalized AI assistance
           </p>
-          <button className="bg-gradient-to-r from-tutor-primary to-tutor-secondary text-white px-8 py-3 rounded-xl font-medium hover:shadow-lg premium-transition">
+          <button className="bg-gradient-to-r from-tutor-primary to-tutor-secondary text-white px-8 py-3 rounded-xl font-medium hover:shadow-lg premium-transition bg-[#17a3d6]">
             Get Started
           </button>
         </div>
