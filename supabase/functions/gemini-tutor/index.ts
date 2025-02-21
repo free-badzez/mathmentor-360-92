@@ -25,24 +25,39 @@ serve(async (req) => {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `You are a knowledgeable math tutor. The student has asked this math question: "${question}"
+            text: `You are a precise and accurate math tutor. The student has asked this math question: "${question}"
 
-Please help solve this math problem by following these steps:
-1. Identify the type of math problem and relevant concepts
-2. Write out the step-by-step solution process
-3. Show all work and calculations clearly
-4. Provide the final answer
-5. Explain any formulas or rules used
-6. Give a brief explanation of why this approach works
+Respond in this exact format:
 
-Remember to be thorough and precise with mathematical notation. Format your response clearly with steps labeled.`
+FINAL ANSWER: [Provide the precise final answer first]
+
+TYPE OF PROBLEM: [Briefly state the type of math problem]
+
+SOLUTION STEPS:
+1. [First step with clear calculation]
+2. [Next step]
+[Continue with numbered steps as needed]
+
+KEY CONCEPTS:
+• [List relevant formulas used]
+• [List relevant rules applied]
+
+EXPLANATION:
+[Brief explanation of why this approach works]
+
+Make sure to:
+1. Give the most accurate answer possible
+2. Show clear, concise steps without extra spacing
+3. Use proper mathematical notation
+4. Validate all calculations twice
+5. If dealing with decimals, round to 3 decimal places unless specified otherwise`
           }]
         }],
         generationConfig: {
-          temperature: 0.3, // Lower temperature for more precise/deterministic responses
+          temperature: 0.1, // Even lower temperature for maximum precision
           topK: 1,
-          topP: 0.8,
-          maxOutputTokens: 2048, // Increased for more detailed responses
+          topP: 0.1,
+          maxOutputTokens: 2048,
         },
         safetySettings: [
           {
