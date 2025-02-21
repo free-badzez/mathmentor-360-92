@@ -68,7 +68,7 @@ const Resources = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {resources.map(resource => <Card key={resource.id} className="glass-card animate-fade-up hover-lift transition-all duration-300">
-              <CardHeader className="border-color: white">
+              <CardHeader className="border-color: red; rounded-xl">
                 <div className="flex items-center justify-between mb-2">
                   <div className="p-2 rounded-lg bg-tutor-primary/10">
                     <resource.icon className="h-5 w-5 text-tutor-primary" />
