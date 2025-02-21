@@ -42,7 +42,7 @@ const Index = () => {
 
         <div style={{
         animationDelay: "0.4s"
-      }} className="mt-16 glass-card p-8 rounded-2xl animate-slide-up bg-[#151515]">
+      }} className="mt-16 glass-card p-8 rounded-2xl animate-slide-up bg-[#1e1f1e]">
           <h3 className="text-xl font-semibold mb-4 text-tutor-text">
             Ready to start learning?
           </h3>
