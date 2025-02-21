@@ -30,7 +30,7 @@ const ProblemCard = ({
       button.classList.remove('bg-green-500', 'bg-red-500', 'hover:bg-green-600', 'hover:bg-red-600');
     });
   }, [problem.id]);
-  return <Card className="glass-card p-6 animate-fade-up hover-lift bg-slate-50">
+  return <Card className="glass-card p-6 animate-fade-up hover-lift bg-zinc-900 hover:bg-zinc-800">
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -44,7 +44,7 @@ const ProblemCard = ({
             <p className="text-lg font-medium mb-4 text-slate-50">{problem.question}</p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              {problem.options.map(option => <Button key={option.id} data-option={option.id} variant={selectedAnswer === option.id ? "default" : "outline"} onClick={() => onAnswerSelect(problem.id, option.id)} className="bg-slate-50 text-zinc-950 rounded-xl font-normal">
+              {problem.options.map(option => <Button key={option.id} data-option={option.id} variant={selectedAnswer === option.id ? "default" : "outline"} onClick={() => onAnswerSelect(problem.id, option.id)} className="bg-slate-50 text-zinc-950">
                   {option.id}. {option.text}
                 </Button>)}
             </div>
