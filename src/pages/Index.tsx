@@ -27,7 +27,7 @@ const Index = () => {
 
           <div style={{
           animationDelay: "0.3s"
-        }} className="glass-card p-8 rounded-2xl animate-slide-up hover-lift bg-[#151515]">
+        }} className="glass-card p-8 rounded-2xl animate-slide-up hover-lift bg-[i] bg-[#1e1f1e]">
             <div className="h-12 w-12 bg-gradient-to-br from-tutor-secondary to-tutor-accent rounded-xl mb-6 mx-auto flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
