@@ -94,11 +94,11 @@ const Practice = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Practice Problems</h1>
-          <p className="text-gray-600">
+          <h1 className="text-4xl font-bold text-foreground mb-4">Practice Problems</h1>
+          <p className="text-muted-foreground">
             Strengthen your math skills with these practice problems
             {correctAnswersCount > 0 && (
               <span className="ml-2">
@@ -116,24 +116,24 @@ const Practice = () => {
           />
         ) : isLoading ? (
           <Card className="p-8 text-center">
-            <p>Generating questions...</p>
+            <p className="text-foreground">Generating questions...</p>
           </Card>
         ) : showGame ? (
           <MathGame onComplete={handleGameComplete} />
         ) : isFinished ? (
-          <Card className="p-8">
-            <CardContent>
-              <h2 className="text-2xl font-bold mb-4">Practice Results</h2>
-              <div className="space-y-4">
+          <Card className="glass-card">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-bold mb-4 text-foreground">Practice Results</h2>
+              <div className="space-y-4 text-foreground">
                 <p>Total Questions: {problems.length}</p>
                 <p>Correct Answers: {correctAnswersCount}</p>
                 <p>Accuracy: {calculateAccuracy().toFixed(1)}%</p>
-                <button
+                <Button
                   onClick={() => setSelectedChapter(null)}
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="mt-4 w-full"
                 >
                   Try Another Chapter
-                </button>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -149,7 +149,7 @@ const Practice = () => {
             hasNextQuestion={currentProblemIndex < problems.length - 1}
           />
         ) : (
-          <div className="text-center py-8 text-gray-600">
+          <div className="text-center py-8 text-muted-foreground">
             No problems available for this chapter yet.
           </div>
         )}

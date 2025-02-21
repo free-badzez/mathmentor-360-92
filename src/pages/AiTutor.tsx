@@ -140,14 +140,14 @@ const AiTutor = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">AI Math Tutor</h1>
-          <p className="text-gray-600">Get instant help with any math problem or concept</p>
+          <h1 className="text-4xl font-bold text-foreground mb-4">AI Math Tutor</h1>
+          <p className="text-muted-foreground">Get instant help with any math problem or concept</p>
         </div>
 
-        <Card className="mb-8">
+        <Card className="mb-8 glass-card">
           <CardContent className="p-6">
             <form onSubmit={handleQuestionSubmit} className="space-y-4">
               <div className="flex gap-4">
@@ -155,14 +155,14 @@ const AiTutor = () => {
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="e.g., How do I solve quadratic equations?"
-                  className="flex-1"
+                  className="flex-1 bg-background text-foreground"
                 />
                 <Button 
                   type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700 transition-colors gap-2"
+                  className="gap-2"
                   disabled={loading}
                 >
-                  {loading ? <MessageCircle className="animate-spin" /> : <Send />}
+                  {loading ? <MessageCircle className="animate-spin" /> : <Send className="text-current" />}
                   {loading ? "Thinking..." : "Ask"}
                 </Button>
               </div>
@@ -174,18 +174,18 @@ const AiTutor = () => {
           {chatHistory.map((message) => (
             <Card 
               key={message.id} 
-              className={message.type === 'user' ? 'bg-white' : 'bg-blue-50'}
+              className={`glass-card ${message.type === 'user' ? 'bg-secondary' : 'bg-primary/5'}`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   {message.type === 'user' ? (
-                    <MessageCircle className="h-6 w-6 text-gray-500" />
+                    <MessageCircle className="h-6 w-6 text-muted-foreground" />
                   ) : (
-                    <Brain className="h-6 w-6 text-blue-500" />
+                    <Brain className="h-6 w-6 text-primary" />
                   )}
                   <div className="flex-1">
-                    <p className="text-gray-700 whitespace-pre-wrap">{message.content}</p>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
                       {message.timestamp.toLocaleTimeString()}
                     </p>
                   </div>
