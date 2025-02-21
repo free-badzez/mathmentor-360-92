@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import ProblemCard from "@/components/ProblemCard";
@@ -95,14 +96,16 @@ const Practice = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground pt-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Practice Problems</h1>
-          <p className="text-muted-foreground">
+        <div className="text-center mb-8 space-y-4">
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80">
+            Practice Problems
+          </h1>
+          <p className="text-muted-foreground text-lg">
             Strengthen your math skills with these practice problems
             {correctAnswersCount > 0 && (
-              <span className="ml-2">
+              <span className="ml-2 text-primary">
                 • Score: {correctAnswersCount} ✨
               </span>
             )}
@@ -116,13 +119,13 @@ const Practice = () => {
             onChapterSelect={handleChapterSelect}
           />
         ) : isLoading ? (
-          <Card className="p-8 text-center">
+          <Card className="p-8 text-center glass-card animate-fade-up">
             <p className="text-foreground">Generating questions...</p>
           </Card>
         ) : showGame ? (
           <MathGame onComplete={handleGameComplete} />
         ) : isFinished ? (
-          <Card className="glass-card">
+          <Card className="glass-card animate-fade-up">
             <CardContent className="p-8">
               <h2 className="text-2xl font-bold mb-4 text-foreground">Practice Results</h2>
               <div className="space-y-4 text-foreground">
@@ -132,6 +135,7 @@ const Practice = () => {
                 <Button
                   onClick={() => setSelectedChapter(null)}
                   className="mt-4 w-full"
+                  variant="default"
                 >
                   Try Another Chapter
                 </Button>
