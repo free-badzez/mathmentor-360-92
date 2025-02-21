@@ -1,11 +1,12 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Calculator, GraduationCap, Home, BookOpen, User, Library, LayoutDashboard, Binary, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <nav className="fixed top-0 left-0 right-0 glass-nav z-50">
@@ -14,7 +15,7 @@ const Navbar = () => {
           <div className="flex">
             <Link
               to="/"
-              className="flex items-center px-4 text-gray-700 hover:text-gray-900 premium-transition"
+              className="flex items-center px-4 text-foreground hover:text-foreground/90 premium-transition"
             >
               <GraduationCap className="h-6 w-6 mr-2" />
               <span className="font-semibold text-lg">MathMentor</span>
@@ -30,27 +31,26 @@ const Navbar = () => {
           </Button>
 
           <div className="hidden md:flex space-x-2">
-            <NavLink to="/" icon={<Home className="h-5 w-5" />} text="Home" />
-            <NavLink to="/dashboard" icon={<LayoutDashboard className="h-5 w-5" />} text="Dashboard" />
-            <NavLink to="/practice" icon={<Calculator className="h-5 w-5" />} text="Practice" />
-            <NavLink to="/ai-tutor" icon={<BookOpen className="h-5 w-5" />} text="AI Tutor" />
-            <NavLink to="/resources" icon={<Library className="h-5 w-5" />} text="Resources" />
-            <NavLink to="/formulas" icon={<Binary className="h-5 w-5" />} text="Formulas" />
-            <NavLink to="/profile" icon={<User className="h-5 w-5" />} text="Profile" />
+            <NavLink to="/" icon={<Home className="h-5 w-5" />} text="Home" isActive={location.pathname === "/"} />
+            <NavLink to="/dashboard" icon={<LayoutDashboard className="h-5 w-5" />} text="Dashboard" isActive={location.pathname === "/dashboard"} />
+            <NavLink to="/practice" icon={<Calculator className="h-5 w-5" />} text="Practice" isActive={location.pathname === "/practice"} />
+            <NavLink to="/ai-tutor" icon={<BookOpen className="h-5 w-5" />} text="AI Tutor" isActive={location.pathname === "/ai-tutor"} />
+            <NavLink to="/resources" icon={<Library className="h-5 w-5" />} text="Resources" isActive={location.pathname === "/resources"} />
+            <NavLink to="/formulas" icon={<Binary className="h-5 w-5" />} text="Formulas" isActive={location.pathname === "/formulas"} />
+            <NavLink to="/profile" icon={<User className="h-5 w-5" />} text="Profile" isActive={location.pathname === "/profile"} />
           </div>
         </div>
 
-        {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <MobileNavLink to="/" icon={<Home className="h-5 w-5" />} text="Home" />
-              <MobileNavLink to="/dashboard" icon={<LayoutDashboard className="h-5 w-5" />} text="Dashboard" />
-              <MobileNavLink to="/practice" icon={<Calculator className="h-5 w-5" />} text="Practice" />
-              <MobileNavLink to="/ai-tutor" icon={<BookOpen className="h-5 w-5" />} text="AI Tutor" />
-              <MobileNavLink to="/resources" icon={<Library className="h-5 w-5" />} text="Resources" />
-              <MobileNavLink to="/formulas" icon={<Binary className="h-5 w-5" />} text="Formulas" />
-              <MobileNavLink to="/profile" icon={<User className="h-5 w-5" />} text="Profile" />
+              <MobileNavLink to="/" icon={<Home className="h-5 w-5" />} text="Home" isActive={location.pathname === "/"} />
+              <MobileNavLink to="/dashboard" icon={<LayoutDashboard className="h-5 w-5" />} text="Dashboard" isActive={location.pathname === "/dashboard"} />
+              <MobileNavLink to="/practice" icon={<Calculator className="h-5 w-5" />} text="Practice" isActive={location.pathname === "/practice"} />
+              <MobileNavLink to="/ai-tutor" icon={<BookOpen className="h-5 w-5" />} text="AI Tutor" isActive={location.pathname === "/ai-tutor"} />
+              <MobileNavLink to="/resources" icon={<Library className="h-5 w-5" />} text="Resources" isActive={location.pathname === "/resources"} />
+              <MobileNavLink to="/formulas" icon={<Binary className="h-5 w-5" />} text="Formulas" isActive={location.pathname === "/formulas"} />
+              <MobileNavLink to="/profile" icon={<User className="h-5 w-5" />} text="Profile" isActive={location.pathname === "/profile"} />
             </div>
           </div>
         )}
@@ -59,20 +59,28 @@ const Navbar = () => {
   );
 };
 
-const NavLink = ({ to, icon, text }: { to: string; icon: React.ReactNode; text: string }) => (
+const NavLink = ({ to, icon, text, isActive }: { to: string; icon: React.ReactNode; text: string; isActive: boolean }) => (
   <Link
     to={to}
-    className="flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 premium-transition group"
+    className={`flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+      isActive 
+        ? "bg-accent text-accent-foreground" 
+        : "text-foreground/70 hover:text-foreground hover:bg-accent/50"
+    } premium-transition group`}
   >
     {icon}
     <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">{text}</span>
   </Link>
 );
 
-const MobileNavLink = ({ to, icon, text }: { to: string; icon: React.ReactNode; text: string }) => (
+const MobileNavLink = ({ to, icon, text, isActive }: { to: string; icon: React.ReactNode; text: string; isActive: boolean }) => (
   <Link
     to={to}
-    className="flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 premium-transition"
+    className={`flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+      isActive 
+        ? "bg-accent text-accent-foreground" 
+        : "text-foreground/70 hover:text-foreground hover:bg-accent/50"
+    } premium-transition`}
   >
     {icon}
     <span className="ml-2">{text}</span>
