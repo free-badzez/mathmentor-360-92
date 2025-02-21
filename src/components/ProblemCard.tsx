@@ -44,7 +44,7 @@ const ProblemCard = ({
             <p className="text-lg font-medium mb-4 text-slate-50">{problem.question}</p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              {problem.options.map(option => <Button key={option.id} data-option={option.id} variant={selectedAnswer === option.id ? "default" : "outline"} className={`justify-start ${selectedAnswer === option.id && option.id === problem.correctAnswer ? "bg-green-500 hover:bg-green-600" : selectedAnswer === option.id ? "bg-red-500 hover:bg-red-600" : ""}`} onClick={() => onAnswerSelect(problem.id, option.id)}>
+              {problem.options.map(option => <Button key={option.id} data-option={option.id} variant={selectedAnswer === option.id ? "default" : "outline"} onClick={() => onAnswerSelect(problem.id, option.id)} className="bg-slate-50 text-zinc-950">
                   {option.id}. {option.text}
                 </Button>)}
             </div>
