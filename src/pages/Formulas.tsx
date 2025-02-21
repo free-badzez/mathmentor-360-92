@@ -167,7 +167,7 @@ const Formulas = () => {
                       <p className="text-gray-600 mb-2">{formula.explanation}</p>
                       <div className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-sm font-medium text-gray-500">Example:</p>
-                        <p className="whitespace-pre-wrap font-mono text-sm">{formula.example}</p>
+                        <p className="whitespace-pre-wrap font-mono text-sm text-[#444545]">{formula.example}</p>
                       </div>
                     </div>)}
                 </div>
