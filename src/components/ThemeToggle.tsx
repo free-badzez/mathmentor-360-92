@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 const ThemeToggle = () => {
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem('theme');
-    return stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    return stored || 'light'; // Changed default to light
   });
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -93,8 +94,8 @@ const AiTutor = () => {
     e.preventDefault();
     if (!question.trim()) {
       toast({
-        title: "Please enter a question",
-        description: "The question field cannot be empty",
+        title: "No math question asked",
+        description: "Please enter a math question to get help",
         variant: "destructive",
       });
       return;
@@ -169,6 +170,15 @@ const AiTutor = () => {
             </form>
           </CardContent>
         </Card>
+
+        {chatHistory.length === 0 && (
+          <Card className="glass-card mb-6">
+            <CardContent className="p-4 text-center text-muted-foreground">
+              <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>No math questions asked yet. Ask a question to get started!</p>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="space-y-6">
           {chatHistory.map((message) => (
