@@ -162,7 +162,7 @@ const Formulas = () => {
             {expandedCategory === category && <CardContent>
                 <div className="grid grid-cols-1 gap-4">
                   {formulas.map((formula, index) => <div key={index} className="p-4 rounded-lg transition-all bg-slate-50">
-                      <h3 className="font-medium text-tutor-primary mb-2">{formula.name}</h3>
+                      <h3 className="font-medium text-tutor-primary mb-2 text-[#50ace9]">{formula.name}</h3>
                       <p className="text-gray-700 font-mono bg-gray-50 p-2 rounded mb-2">{formula.formula}</p>
                       <p className="text-gray-600 mb-2">{formula.explanation}</p>
                       <div className="bg-gray-50 p-3 rounded-lg">
