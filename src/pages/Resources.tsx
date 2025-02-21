@@ -87,7 +87,7 @@ const Resources = () => {
                   </span>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="bg-neutral-950 hover:bg-neutral-800">
                 <p className="text-gray-600 mb-4">{resource.description}</p>
                 <div className="flex gap-2">
                   <Button onClick={() => handleResourceClick(resource)} className="flex-1 bg-tutor-primary hover:bg-tutor-secondary text-slate-50 bg-[#17b6f7]">
