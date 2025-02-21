@@ -6,6 +6,7 @@ import FloatingCalculator from "@/components/FloatingCalculator";
 import ChapterSelector from "@/components/ChapterSelector";
 import { Problem, Chapter } from "@/types/practice";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 const Practice = () => {
