@@ -25,18 +25,57 @@ serve(async (req) => {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `You are a math tutor. Help explain the following math question or concept. Be detailed and include relevant formulas and examples when applicable: ${question}`
+            text: `You are a knowledgeable math tutor. The student has asked this math question: "${question}"
+
+Please help solve this math problem by following these steps:
+1. Identify the type of math problem and relevant concepts
+2. Write out the step-by-step solution process
+3. Show all work and calculations clearly
+4. Provide the final answer
+5. Explain any formulas or rules used
+6. Give a brief explanation of why this approach works
+
+Remember to be thorough and precise with mathematical notation. Format your response clearly with steps labeled.`
           }]
         }],
         generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
+          temperature: 0.3, // Lower temperature for more precise/deterministic responses
+          topK: 1,
+          topP: 0.8,
+          maxOutputTokens: 2048, // Increased for more detailed responses
         },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_NONE",
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_NONE",
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_NONE",
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_NONE",
+          },
+        ]
       }),
     });
 
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Gemini API error: ${JSON.stringify(error)}`);
+    }
+
     const data = await response.json();
+    
+    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response format from Gemini API');
+    }
+
     const answer = data.candidates[0].content.parts[0].text;
 
     return new Response(JSON.stringify({ answer }), {
