@@ -65,7 +65,7 @@ const FloatingCalculator = () => {
       </Button>
 
       {isOpen && <Card className="absolute bottom-16 right-0 w-64 p-4 glass-card animate-fade-up shadow-xl">
-          <div className="p-2 rounded mb-2 text-right bg-slate-600 hover:bg-slate-500">
+          <div className="p-2 rounded mb-2 text-right bg-zinc-400 hover:bg-zinc-300">
             <span className="text-xl">{display}</span>
           </div>
           <div className="grid grid-cols-4 gap-2">
