@@ -9,6 +9,7 @@ import { Problem, Chapter } from "@/types/practice";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle } from "lucide-react";
 
 const Practice = () => {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
@@ -20,6 +21,7 @@ const Practice = () => {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [isFinished, setIsFinished] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const { toast } = useToast();
 
   const chapters: Chapter[] = [
@@ -33,21 +35,57 @@ const Practice = () => {
 
   const generateProblems = async (chapterId: string) => {
     setIsLoading(true);
+    setErrorDetails(null);
+    
     try {
       const chapter = chapters.find(c => c.id === chapterId)?.name;
+      
+      if (!chapter) {
+        throw new Error("Invalid chapter selected");
+      }
+      
+      console.log(`Generating questions for chapter: ${chapter}`);
+      
       const { data, error } = await supabase.functions.invoke('generate-math-questions', {
         body: { chapter }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Function invocation error:", error);
+        throw error;
+      }
+      
+      if (!data || !data.questions || !Array.isArray(data.questions)) {
+        throw new Error("Invalid response format received");
+      }
+      
+      console.log(`Received ${data.questions.length} questions`);
       setProblems(data.questions);
-    } catch (error) {
-      console.error('Error:', error);
+      
+      toast({
+        title: "Questions generated",
+        description: `${data.questions.length} questions ready for practice`,
+      });
+    } catch (error: any) {
+      console.error('Error generating questions:', error);
+      
+      // Set detailed error message
+      if (error.message && typeof error.message === 'string') {
+        setErrorDetails(error.message);
+      } else if (error.error_description) {
+        setErrorDetails(error.error_description);
+      } else {
+        setErrorDetails("Unknown error occurred. Please try again.");
+      }
+      
       toast({
         title: "Error generating questions",
-        description: "Please try again",
+        description: "Could not generate practice problems",
         variant: "destructive",
       });
+      
+      // Reset selected chapter if there's an error
+      setSelectedChapter(null);
     } finally {
       setIsLoading(false);
     }
@@ -95,6 +133,12 @@ const Practice = () => {
     return (correctAnswersCount / Object.keys(selectedAnswers).length) * 100;
   };
 
+  const handleRetry = async () => {
+    if (selectedChapter) {
+      await generateProblems(selectedChapter);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -119,8 +163,36 @@ const Practice = () => {
             onChapterSelect={handleChapterSelect}
           />
         ) : isLoading ? (
-          <Card className="p-8 text-center glass-card animate-fade-up">
-            <p className="text-foreground">Generating questions...</p>
+          <Card className="p-8 text-center glass-card animate-pulse">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+              <p className="text-foreground">Generating questions...</p>
+              <p className="text-sm text-muted-foreground">This may take a moment</p>
+            </div>
+          </Card>
+        ) : errorDetails ? (
+          <Card className="glass-card animate-fade-up p-6">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <AlertTriangle className="h-12 w-12 text-destructive" />
+                <h2 className="text-xl font-semibold text-destructive">Error Generating Questions</h2>
+                <p className="text-muted-foreground">{errorDetails}</p>
+                <div className="flex gap-4 mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedChapter(null)}
+                  >
+                    Try Another Chapter
+                  </Button>
+                  <Button
+                    variant="default"
+                    onClick={handleRetry}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         ) : showGame ? (
           <MathGame onComplete={handleGameComplete} />
