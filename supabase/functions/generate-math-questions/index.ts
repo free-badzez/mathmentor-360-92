@@ -1,44 +1,46 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-serve(async (req) => {
+interface RequestBody {
+  chapter: string;
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Get API key from environment
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!apiKey) {
+    console.error('GEMINI_API_KEY is not set in environment variables');
+    return new Response(
+      JSON.stringify({ 
+        error: 'GEMINI_API_KEY not configured', 
+        message: 'Please add the GEMINI_API_KEY to the Supabase Edge Function secrets'
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+
   try {
-    // Check if API key is set
-    if (!GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY is not set in environment variables");
+    // Parse the request body
+    const requestData = await req.json() as RequestBody;
+    const { chapter } = requestData;
+    
+    if (!chapter) {
+      console.error('No chapter provided in request');
       return new Response(
-        JSON.stringify({ 
-          error: "API key configuration error", 
-          details: "The Gemini API key is not configured. Please set it in Supabase Edge Function secrets."
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Parse request body
-    let body;
-    try {
-      body = await req.json();
-    } catch (e) {
-      console.error("Error parsing request body:", e);
-      return new Response(
-        JSON.stringify({ error: "Invalid request format" }),
+        JSON.stringify({ error: 'Bad Request', message: 'Chapter is required' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -46,98 +48,83 @@ serve(async (req) => {
       );
     }
 
-    const { chapter } = body;
-    console.log("Generating questions for chapter:", chapter);
+    console.log(`Generating math questions for chapter: ${chapter}`);
 
-    if (!chapter || typeof chapter !== 'string') {
-      return new Response(
-        JSON.stringify({ error: "Invalid chapter format. Expected a string." }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    // Construct the prompt for generating questions
+    const prompt = `
+      Generate 5 multiple-choice math practice problems for ${chapter}.
+      Format the response as a valid JSON array of objects with the following structure:
+      
+      {
+        "questions": [
+          {
+            "id": 1,
+            "question": "The question text",
+            "options": [
+              {"id": "A", "text": "First option"},
+              {"id": "B", "text": "Second option"},
+              {"id": "C", "text": "Third option"},
+              {"id": "D", "text": "Fourth option"}
+            ],
+            "correctAnswer": "A",
+            "explanation": "Explanation of the correct answer",
+            "difficulty": "Easy/Medium/Hard",
+            "subject": "Mathematics",
+            "chapter": "${chapter}"
+          },
+          ... more questions
+        ]
+      }
+      
+      Only return the JSON without any additional text or formatting.
+    `;
 
-    const prompt = `Generate 5 multiple choice math questions for ${chapter}, specifically:
-    - 2 Easy questions
-    - 2 Medium questions
-    - 1 Hard question
-    
-    Format each question as a JSON object with these properties:
-    - question (string, keep it concise)
-    - options (array of 4 objects with id: "a"|"b"|"c"|"d" and text: string)
-    - correctAnswer ("a"|"b"|"c"|"d")
-    - explanation (brief but clear step-by-step solution)
-    - difficulty (string: "Easy"|"Medium"|"Hard")
-    - subject (string: include the general math subject like "Algebra", "Geometry", etc.)
-    - chapter (string: the specific chapter like "${chapter}")
-    
-    Make sure the questions are focused and practical. Return as a clean JSON array without any additional text, explanation, or code formatting.`;
-
-    console.log("Sending request to Gemini API");
-    const apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY;
-    
-    console.log("API URL (without key):", 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent');
-    
-    const response = await fetch(apiUrl, {
+    // Make request to Gemini API
+    const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    const response = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
+        contents: [
+          {
+            parts: [{ text: prompt }]
+          }
+        ],
         generationConfig: {
           temperature: 0.2,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096,
-        },
-      }),
+          maxOutputTokens: 2048
+        }
+      })
     });
 
-    console.log("Gemini API response status:", response.status);
-    
+    // Check if the Gemini API response is successful
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Gemini API error response:", errorText);
-      
-      let errorMessage = "Error from Gemini API";
-      try {
-        const errorData = JSON.parse(errorText);
-        if (errorData.error && errorData.error.message) {
-          errorMessage = errorData.error.message;
-        }
-      } catch (e) {
-        // If parsing fails, use the raw error text
-        errorMessage = errorText.substring(0, 200); // Limit length
-      }
+      const errorData = await response.text();
+      console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorData);
       
       return new Response(
         JSON.stringify({ 
-          error: `Gemini API error: ${response.status}`, 
-          details: errorMessage
+          error: 'Gemini API Error', 
+          message: `Error from Gemini API: ${response.status} ${response.statusText}` 
         }),
         { 
-          status: 500, 
+          status: 502, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
+    // Parse the Gemini API response
     const data = await response.json();
-    console.log("Gemini API response received");
     
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      console.error("Invalid response format:", JSON.stringify(data, null, 2));
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+      console.error('Unexpected Gemini API response format', data);
       return new Response(
         JSON.stringify({ 
-          error: 'Invalid response format from Gemini API',
-          details: JSON.stringify(data)
+          error: 'Unexpected Response', 
+          message: 'Unexpected response format from Gemini API' 
         }),
         { 
           status: 500, 
@@ -145,84 +132,33 @@ serve(async (req) => {
         }
       );
     }
-    
-    const questionsText = data.candidates[0].content.parts[0].text;
-    console.log("Response text length:", questionsText.length);
-    console.log("Response text preview:", questionsText.substring(0, 200) + "...");
-    
-    // Extract JSON array from the response text
-    try {
-      // Try different methods to extract JSON
-      let jsonString = "";
-      let questions = null;
-      
-      // Method 1: Look for array brackets
-      const startIndex = questionsText.indexOf('[');
-      const endIndex = questionsText.lastIndexOf(']') + 1;
-      
-      if (startIndex !== -1 && endIndex > 0) {
-        jsonString = questionsText.substring(startIndex, endIndex);
-        console.log("Extracted JSON using array brackets method");
-        try {
-          questions = JSON.parse(jsonString);
-        } catch (e) {
-          console.log("Method 1 failed, trying alternative methods");
-        }
-      }
-      
-      // Method 2: Try to extract from code blocks if Method 1 failed
-      if (!questions) {
-        const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)```/;
-        const match = questionsText.match(codeBlockRegex);
-        if (match && match[1]) {
-          jsonString = match[1].trim();
-          console.log("Extracted JSON from code block");
-          try {
-            questions = JSON.parse(jsonString);
-          } catch (e) {
-            console.log("Method 2 failed");
-          }
-        }
-      }
-      
-      // Method 3: Last resort - try to parse the whole text
-      if (!questions) {
-        try {
-          questions = JSON.parse(questionsText);
-          console.log("Parsed entire response as JSON");
-        } catch (e) {
-          console.error("All JSON parsing methods failed");
-          throw new Error("Could not extract valid JSON from response");
-        }
-      }
-      
-      if (!questions || !Array.isArray(questions)) {
-        throw new Error("Extracted content is not a valid array");
-      }
-      
-      console.log(`Successfully parsed ${questions.length} questions`);
-      
-      // Add IDs to questions
-      const questionsWithIds = questions.map((q, index) => ({
-        ...q,
-        id: index + 1
-      }));
 
-      return new Response(
-        JSON.stringify({ questions: questionsWithIds }), 
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200
-        }
-      );
-    } catch (parseError) {
-      console.error("JSON parsing error:", parseError);
-      console.error("JSON string excerpt:", questionsText.substring(0, 500) + "...");
+    // Extract the text content from the response
+    const textContent = data.candidates[0].content.parts[0].text || '';
+    console.log(`Received response from Gemini API (${textContent.length} chars)`);
+
+    // Find and extract the JSON part
+    let jsonText = textContent;
+    if (textContent.includes('{')) {
+      jsonText = textContent.substring(textContent.indexOf('{'));
+      if (jsonText.lastIndexOf('}') !== -1) {
+        jsonText = jsonText.substring(0, jsonText.lastIndexOf('}') + 1);
+      }
+    }
+
+    // Parse the JSON
+    let parsedData;
+    try {
+      parsedData = JSON.parse(jsonText);
+      console.log(`Successfully parsed JSON with ${parsedData.questions?.length || 0} questions`);
+    } catch (jsonError) {
+      console.error('Error parsing JSON from Gemini response:', jsonError);
+      console.log('Raw text received:', textContent);
       
       return new Response(
         JSON.stringify({ 
-          error: `Failed to parse questions: ${parseError.message}`,
-          details: "The AI generated invalid JSON. Please try again."
+          error: 'Invalid JSON', 
+          message: 'Failed to parse valid JSON from the Gemini API response' 
         }),
         { 
           status: 500, 
@@ -230,16 +166,25 @@ serve(async (req) => {
         }
       );
     }
+
+    // Return the questions to the client
+    return new Response(
+      JSON.stringify(parsedData),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   } catch (error) {
-    console.error('Error in generate-math-questions function:', error);
+    console.error('Error generating math questions:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: "An unexpected error occurred. Please try again or contact support."
+        error: 'Internal Server Error', 
+        message: error.message || 'An unexpected error occurred' 
       }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Brain, MessageCircle, Send } from "lucide-react";
+import { Brain, MessageCircle, Send, AlertTriangle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ChatMessage {
@@ -88,6 +88,7 @@ const AiTutor = () => {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
@@ -102,6 +103,7 @@ const AiTutor = () => {
     }
 
     setLoading(true);
+    setError(null);
     
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -113,11 +115,18 @@ const AiTutor = () => {
     setChatHistory(prev => [...prev, userMessage]);
 
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-tutor', {
+      const { data, error: functionError } = await supabase.functions.invoke('gemini-tutor', {
         body: { question: question }
       });
 
-      if (error) throw error;
+      if (functionError) {
+        console.error('Function invocation error:', functionError);
+        throw functionError;
+      }
+
+      if (!data || !data.answer) {
+        throw new Error('Invalid response format received');
+      }
 
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -130,13 +139,37 @@ const AiTutor = () => {
       setQuestion("");
     } catch (error) {
       console.error('Error:', error);
+      
+      let errorMessage = "Failed to get a response. Please try again later.";
+      
+      if (error.message && typeof error.message === 'string') {
+        errorMessage = error.message;
+      } else if (error.error_description) {
+        errorMessage = error.error_description;
+      } else if (error.statusText) {
+        errorMessage = `Server error: ${error.statusText}`;
+      }
+      
+      if (errorMessage.includes('API key')) {
+        errorMessage = "Missing or invalid API key. Please check the Gemini API key configuration.";
+      }
+      
+      setError(errorMessage);
+      
       toast({
         title: "Error getting response",
-        description: "Please try again later",
+        description: "Could not get an answer from the AI tutor",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    if (question) {
+      handleQuestionSubmit(new Event('submit') as unknown as React.FormEvent);
     }
   };
 
@@ -157,6 +190,7 @@ const AiTutor = () => {
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="e.g., How do I solve quadratic equations?"
                   className="flex-1 bg-background text-foreground"
+                  disabled={loading}
                 />
                 <Button 
                   type="submit" 
@@ -171,7 +205,29 @@ const AiTutor = () => {
           </CardContent>
         </Card>
 
-        {chatHistory.length === 0 && (
+        {error && (
+          <Card className="mb-6 border-destructive glass-card">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-6 w-6 text-destructive" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-destructive">Error getting AI response</h3>
+                  <p className="text-muted-foreground">{error}</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2 gap-1"
+                    onClick={handleRetry}
+                  >
+                    <RefreshCw className="h-3 w-3" /> Retry
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {chatHistory.length === 0 && !error && (
           <Card className="glass-card mb-6">
             <CardContent className="p-4 text-center text-muted-foreground">
               <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />

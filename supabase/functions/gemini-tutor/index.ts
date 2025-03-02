@@ -1,123 +1,136 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-if (!GEMINI_API_KEY) {
-  console.error("GEMINI_API_KEY is not set");
-}
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-serve(async (req) => {
+interface RequestBody {
+  question: string;
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { question } = await req.json();
-    console.log("Received question:", question);
+  // Get API key from environment
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!apiKey) {
+    console.error('GEMINI_API_KEY is not set in environment variables');
+    return new Response(
+      JSON.stringify({ 
+        error: 'GEMINI_API_KEY not configured', 
+        message: 'Please add the GEMINI_API_KEY to the Supabase Edge Function secrets'
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
 
-    if (!question || typeof question !== 'string') {
-      throw new Error("Invalid question format. Expected a string.");
+  try {
+    // Parse the request body
+    const requestData = await req.json() as RequestBody;
+    const { question } = requestData;
+    
+    if (!question) {
+      console.error('No question provided in request');
+      return new Response(
+        JSON.stringify({ error: 'Bad Request', message: 'Question is required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY, {
+    console.log(`Processing math tutor request: "${question.substring(0, 50)}${question.length > 50 ? '...' : ''}"`);
+
+    // Construct the request to Gemini API
+    const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    const response = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `You are a precise and accurate math tutor. The student has asked this math question: "${question}"
-
-Respond in this exact format with NO unnecessary line breaks between sections:
-
-FINAL ANSWER: [Provide the precise final answer first]
-
-TYPE OF PROBLEM: [Briefly state the type of math problem]
-
-SOLUTION STEPS:
-1. [First step with clear calculation]
-2. [Next step]
-[Continue with numbered steps as needed]
-
-KEY CONCEPTS:
-• [List relevant formulas used]
-• [List relevant rules applied]
-
-EXPLANATION:
-[Brief explanation of why this approach works]
-
-Make sure to:
-1. Give the most accurate answer possible
-2. Show clear, concise steps without extra spacing
-3. Use proper mathematical notation
-4. Validate all calculations twice
-5. If dealing with decimals, round to 3 decimal places unless specified otherwise`
-          }]
-        }],
+        contents: [
+          {
+            parts: [
+              {
+                text: `You are a helpful math tutor. Answer this math question or provide guidance on this math topic. Give a detailed, step-by-step explanation: ${question}`
+              }
+            ]
+          }
+        ],
         generationConfig: {
-          temperature: 0.1, // Low temperature for maximum precision
-          topK: 1,
-          topP: 0.1,
-          maxOutputTokens: 2048,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_NONE",
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_NONE",
-          },
-          {
-            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_NONE",
-          },
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_NONE",
-          },
-        ]
-      }),
+          temperature: 0.2,
+          maxOutputTokens: 1000
+        }
+      })
     });
 
+    // Check if the Gemini API response is successful
     if (!response.ok) {
       const errorData = await response.text();
-      console.error("Gemini API error response:", errorData);
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+      console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorData);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Gemini API Error', 
+          message: `Error from Gemini API: ${response.status} ${response.statusText}` 
+        }),
+        { 
+          status: 502, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
+    // Parse the Gemini API response
     const data = await response.json();
-    console.log("Gemini API response structure:", JSON.stringify(data, null, 2).substring(0, 200) + "...");
     
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      console.error("Invalid response format:", JSON.stringify(data, null, 2));
-      throw new Error('Invalid response format from Gemini API');
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+      console.error('Unexpected Gemini API response format', data);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Unexpected Response', 
+          message: 'Unexpected response format from Gemini API' 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    const answer = data.candidates[0].content.parts[0].text;
-    console.log("Generated answer:", answer.substring(0, 100) + "...");
+    // Extract the text content from the response
+    const textContent = data.candidates[0].content.parts[0].text || 'No answer generated';
+    console.log(`Successfully generated tutor response (${textContent.length} chars)`);
 
-    return new Response(JSON.stringify({ answer }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200
-    });
+    // Return the formatted answer to the client
+    return new Response(
+      JSON.stringify({ answer: textContent }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   } catch (error) {
-    console.error('Error in gemini-tutor function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      details: "Please try again with a different question or contact support if the issue persists."
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Error processing AI tutor request:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal Server Error', 
+        message: error.message || 'An unexpected error occurred' 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 });
