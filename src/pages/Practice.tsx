@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import ProblemCard from "@/components/ProblemCard";
@@ -9,7 +8,7 @@ import { Problem, Chapter } from "@/types/practice";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 const Practice = () => {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
@@ -56,10 +55,11 @@ const Practice = () => {
       }
       
       if (!data || !data.questions || !Array.isArray(data.questions)) {
+        console.error("Invalid response format:", data);
         throw new Error("Invalid response format received");
       }
       
-      console.log(`Received ${data.questions.length} questions`);
+      console.log(`Received ${data.questions.length} questions:`, data.questions);
       setProblems(data.questions);
       
       toast({
@@ -69,14 +69,21 @@ const Practice = () => {
     } catch (error: any) {
       console.error('Error generating questions:', error);
       
-      // Set detailed error message
+      let errorMessage = "Unknown error occurred. Please try again.";
+      
       if (error.message && typeof error.message === 'string') {
-        setErrorDetails(error.message);
+        errorMessage = error.message;
       } else if (error.error_description) {
-        setErrorDetails(error.error_description);
-      } else {
-        setErrorDetails("Unknown error occurred. Please try again.");
+        errorMessage = error.error_description;
+      } else if (error.statusText) {
+        errorMessage = `Server error: ${error.statusText}`;
       }
+      
+      if (errorMessage.includes('API key')) {
+        errorMessage = "Missing or invalid API key. Please check the Gemini API key configuration.";
+      }
+      
+      setErrorDetails(errorMessage);
       
       toast({
         title: "Error generating questions",
@@ -84,7 +91,6 @@ const Practice = () => {
         variant: "destructive",
       });
       
-      // Reset selected chapter if there's an error
       setSelectedChapter(null);
     } finally {
       setIsLoading(false);
@@ -177,7 +183,7 @@ const Practice = () => {
                 <AlertTriangle className="h-12 w-12 text-destructive" />
                 <h2 className="text-xl font-semibold text-destructive">Error Generating Questions</h2>
                 <p className="text-muted-foreground">{errorDetails}</p>
-                <div className="flex gap-4 mt-4">
+                <div className="flex flex-wrap gap-4 mt-4 justify-center">
                   <Button
                     variant="outline"
                     onClick={() => setSelectedChapter(null)}
@@ -186,8 +192,10 @@ const Practice = () => {
                   </Button>
                   <Button
                     variant="default"
+                    className="gap-2"
                     onClick={handleRetry}
                   >
+                    <RefreshCw className="h-4 w-4 mr-1" />
                     Retry
                   </Button>
                 </div>

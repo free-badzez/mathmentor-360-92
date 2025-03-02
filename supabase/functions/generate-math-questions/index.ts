@@ -31,7 +31,22 @@ serve(async (req) => {
       );
     }
 
-    const { chapter } = await req.json();
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error("Error parsing request body:", e);
+      return new Response(
+        JSON.stringify({ error: "Invalid request format" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const { chapter } = body;
     console.log("Generating questions for chapter:", chapter);
 
     if (!chapter || typeof chapter !== 'string') {
@@ -61,7 +76,11 @@ serve(async (req) => {
     Make sure the questions are focused and practical. Return as a clean JSON array without any additional text, explanation, or code formatting.`;
 
     console.log("Sending request to Gemini API");
-    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY, {
+    const apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY;
+    
+    console.log("API URL (without key):", 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent');
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -81,13 +100,27 @@ serve(async (req) => {
       }),
     });
 
+    console.log("Gemini API response status:", response.status);
+    
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error("Gemini API error response:", errorData);
+      const errorText = await response.text();
+      console.error("Gemini API error response:", errorText);
+      
+      let errorMessage = "Error from Gemini API";
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error && errorData.error.message) {
+          errorMessage = errorData.error.message;
+        }
+      } catch (e) {
+        // If parsing fails, use the raw error text
+        errorMessage = errorText.substring(0, 200); // Limit length
+      }
+      
       return new Response(
         JSON.stringify({ 
           error: `Gemini API error: ${response.status}`, 
-          details: errorData
+          details: errorMessage
         }),
         { 
           status: 500, 
@@ -115,6 +148,7 @@ serve(async (req) => {
     
     const questionsText = data.candidates[0].content.parts[0].text;
     console.log("Response text length:", questionsText.length);
+    console.log("Response text preview:", questionsText.substring(0, 200) + "...");
     
     // Extract JSON array from the response text
     try {
