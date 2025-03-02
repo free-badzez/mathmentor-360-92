@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -121,7 +120,7 @@ const AiTutor = () => {
 
       if (functionError) {
         console.error('Function invocation error:', functionError);
-        throw functionError;
+        throw new Error(functionError.message || 'Error invoking function');
       }
 
       if (!data || !data.answer) {
@@ -137,7 +136,7 @@ const AiTutor = () => {
       
       setChatHistory(prev => [...prev, aiMessage]);
       setQuestion("");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
       
       let errorMessage = "Failed to get a response. Please try again later.";
