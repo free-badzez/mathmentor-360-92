@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     console.log(`Processing math tutor request: "${question.substring(0, 50)}${question.length > 50 ? '...' : ''}"`);
 
     // Construct the request to Gemini API
-    const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    const geminiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
     const response = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
