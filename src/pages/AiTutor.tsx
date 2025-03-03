@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,8 @@ const AiTutor = () => {
     setChatHistory(prev => [...prev, userMessage]);
 
     try {
+      console.log("Sending question to gemini-tutor function:", question);
+      
       const { data, error: functionError } = await supabase.functions.invoke('gemini-tutor', {
         body: { question: question }
       });
@@ -127,6 +130,8 @@ const AiTutor = () => {
         throw new Error('Invalid response format received');
       }
 
+      console.log("Received response from gemini-tutor function");
+      
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
@@ -170,6 +175,32 @@ const AiTutor = () => {
     if (question) {
       handleQuestionSubmit(new Event('submit') as unknown as React.FormEvent);
     }
+  };
+
+  const renderFormulaSections = () => {
+    if (chatHistory.length > 0) return null;
+    
+    return (
+      <div className="mt-8 space-y-8">
+        <h2 className="text-2xl font-bold text-center mb-4">Common Math Formulas</h2>
+        {formulaSections.map((section, idx) => (
+          <Card key={idx} className="glass-card">
+            <CardContent className="p-4">
+              <h3 className="text-xl font-semibold mb-2">{section.title}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {section.formulas.map((formula, fidx) => (
+                  <div key={fidx} className="rounded-md bg-secondary/10 p-3">
+                    <h4 className="font-medium text-primary">{formula.name}</h4>
+                    <p className="font-mono text-sm my-1 whitespace-pre-wrap">{formula.formula}</p>
+                    <p className="text-sm text-muted-foreground">{formula.explanation}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -259,6 +290,8 @@ const AiTutor = () => {
             </Card>
           ))}
         </div>
+
+        {renderFormulaSections()}
       </div>
     </div>
   );
