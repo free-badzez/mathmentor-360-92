@@ -1,7 +1,4 @@
 
-// Import the Supabase client
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -62,7 +59,7 @@ Deno.serve(async (req) => {
 
     console.log(`Processing math tutor request: "${question.substring(0, 50)}${question.length > 50 ? '...' : ''}"`);
 
-    // Construct the request to Gemini API
+    // Construct the request to Gemini API with the correct endpoint
     const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
     const response = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
@@ -70,26 +67,21 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: `You are a helpful math tutor. Answer this math question or provide guidance on this math topic. Give a detailed, step-by-step explanation: ${question}`
-              }
-            ]
-          }
-        ],
+        contents: [{
+          parts: [{
+            text: `You are a helpful math tutor. Answer this math question or provide guidance on this math topic. Give a detailed, step-by-step explanation: ${question}`
+          }]
+        }],
         generationConfig: {
           temperature: 0.2,
-          maxOutputTokens: 800
+          maxOutputTokens: 800,
         }
       })
     });
 
-    // Check if the Gemini API response is successful
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorData);
+      const errorText = await response.text();
+      console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorText);
       
       return new Response(
         JSON.stringify({ 
@@ -103,11 +95,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse the Gemini API response
     const data = await response.json();
     
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
-      console.error('Unexpected Gemini API response format', data);
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      console.error('Unexpected Gemini API response format:', data);
       return new Response(
         JSON.stringify({ 
           error: 'Unexpected Response', 
@@ -120,18 +111,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract the text content from the response
-    const textContent = data.candidates[0].content.parts[0].text || 'No answer generated';
-    console.log(`Successfully generated tutor response (${textContent.length} chars)`);
+    const answer = data.candidates[0].content.parts[0].text;
+    console.log(`Successfully generated tutor response (${answer.length} chars)`);
 
-    // Return the formatted answer to the client
     return new Response(
-      JSON.stringify({ answer: textContent }),
+      JSON.stringify({ answer }),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
+
   } catch (error) {
     console.error('Error processing AI tutor request:', error);
     return new Response(
