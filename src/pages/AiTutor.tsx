@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,7 +89,34 @@ const AiTutor = () => {
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [functionReady, setFunctionReady] = useState(false);
   const { toast } = useToast();
+
+  // Check if the edge function is available
+  useEffect(() => {
+    const checkFunction = async () => {
+      try {
+        const { error } = await supabase.functions.invoke('gemini-tutor', {
+          method: 'OPTIONS'
+        });
+        
+        if (error) {
+          console.error("Edge function error:", error);
+          setFunctionReady(false);
+          setError("The AI Tutor service is not ready. Please try again later.");
+        } else {
+          setFunctionReady(true);
+          setError(null);
+        }
+      } catch (err) {
+        console.error("Function check error:", err);
+        setFunctionReady(false);
+        setError("Could not connect to AI Tutor service. Please try again later.");
+      }
+    };
+
+    checkFunction();
+  }, []);
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +124,15 @@ const AiTutor = () => {
       toast({
         title: "No math question asked",
         description: "Please enter a math question to get help",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!functionReady) {
+      toast({
+        title: "Service Unavailable",
+        description: "The AI Tutor service is not available right now. Please try again later.",
         variant: "destructive",
       });
       return;
@@ -225,7 +261,7 @@ const AiTutor = () => {
                 <Button 
                   type="submit" 
                   className="gap-2"
-                  disabled={loading}
+                  disabled={loading || !functionReady}
                 >
                   {loading ? <MessageCircle className="animate-spin" /> : <Send className="text-current" />}
                   {loading ? "Thinking..." : "Ask"}
@@ -234,6 +270,20 @@ const AiTutor = () => {
             </form>
           </CardContent>
         </Card>
+
+        {!functionReady && !error && (
+          <Card className="mb-6 border-warning glass-card bg-amber-100 dark:bg-amber-950/20">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-amber-700 dark:text-amber-500">AI Tutor Service Initializing</h3>
+                  <p className="text-amber-600 dark:text-amber-400">The AI Tutor service is being initialized. This may take a moment.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {error && (
           <Card className="mb-6 border-destructive glass-card">
@@ -257,7 +307,7 @@ const AiTutor = () => {
           </Card>
         )}
 
-        {chatHistory.length === 0 && !error && (
+        {chatHistory.length === 0 && !error && functionReady && (
           <Card className="glass-card mb-6">
             <CardContent className="p-4 text-center text-muted-foreground">
               <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
