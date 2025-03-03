@@ -16,6 +16,17 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Handle the function check request (GET)
+  if (req.method === 'GET') {
+    return new Response(
+      JSON.stringify({ status: 'ok', message: 'Gemini Tutor service is available' }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+
   // Get API key from environment
   const apiKey = Deno.env.get('GEMINI_API_KEY');
   if (!apiKey) {

@@ -96,8 +96,9 @@ const AiTutor = () => {
   useEffect(() => {
     const checkFunction = async () => {
       try {
+        // Use a simple GET request instead of OPTIONS to check if the function exists
         const { error } = await supabase.functions.invoke('gemini-tutor', {
-          method: 'OPTIONS'
+          method: 'GET'
         });
         
         if (error) {
