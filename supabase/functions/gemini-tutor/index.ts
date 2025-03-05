@@ -1,4 +1,7 @@
 
+// This edge function connects to the Gemini API to process math questions
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -8,7 +11,7 @@ interface RequestBody {
   question: string;
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -59,8 +62,10 @@ Deno.serve(async (req) => {
 
     console.log(`Processing math tutor request: "${question.substring(0, 50)}${question.length > 50 ? '...' : ''}"`);
 
-    // Construct the request to Gemini API with the correct endpoint
+    // Construct the request to the Gemini API
     const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    
+    console.log("Sending request to Gemini API");
     const response = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
@@ -79,14 +84,28 @@ Deno.serve(async (req) => {
       })
     });
 
+    console.log(`Gemini API status: ${response.status}`);
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorText);
       
+      let errorMessage = `Error from Gemini API: ${response.status} ${response.statusText}`;
+      
+      // Try to extract a more detailed error message if available
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error && errorJson.error.message) {
+          errorMessage = errorJson.error.message;
+        }
+      } catch (e) {
+        // If parsing fails, just use the original error message
+      }
+      
       return new Response(
         JSON.stringify({ 
           error: 'Gemini API Error', 
-          message: `Error from Gemini API: ${response.status} ${response.statusText}` 
+          message: errorMessage 
         }),
         { 
           status: 502, 
@@ -96,6 +115,7 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log("Received response from Gemini API");
     
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
       console.error('Unexpected Gemini API response format:', data);
